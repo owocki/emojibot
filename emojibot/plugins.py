@@ -66,8 +66,11 @@ def get(message, keyword):
                 }
                 myfile.write(json.dumps(row_json)+"\n")
 
-    message.send('Here are your options..')
-    message.send_webapi('', json.dumps(attachments))
+    if len(attachments) == 0:
+        message.send('Could not find any suitable icons... :sheep: :robot_face:')
+    else:
+        message.send('Here are your options..')
+        message.send_webapi('', json.dumps(attachments))
 
 @respond_to('attach (.*) (.*)')
 def get(message, keyword, dict_key):
