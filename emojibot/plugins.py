@@ -97,7 +97,9 @@ def upload_emoji(message,keyword,url):
     try:
         errors = do_upload(file_path,keyword)
         message.react(keyword)
-        message.reply('Emoji added! Here is `:{}:` :{}:'.format(keyword,keyword))
+        intros = ['Here is', 'Allow me to introduce', 'Please welcome', 'Say hai to', 'Hot new thang']
+        intro = random.choice(intros)
+        message.reply('Emoji added! {} -> `:{}:` :{}:'.format(intro, keyword,keyword))
     except:
         if len(errors) == 0:
             message.reply('Slack replied with unknown error.')
