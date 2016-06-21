@@ -2,7 +2,7 @@
 
 This is a bot that adds custom emojis to slack _via a slack command, NOT in the admin_.
 
-<img src='http://bits.owocki.com/1o1U2i2e1X2Z/Screen%20Recording%202016-06-21%20at%2006.48%20AM.gif' />
+<img src='https://raw.githubusercontent.com/owocki/emojibot/master/examples/howto.gif' />
 
 # Setup
 
