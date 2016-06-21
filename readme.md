@@ -9,6 +9,10 @@ Supports *all* of the below via slack. 👇
 
 <img src='https://raw.githubusercontent.com/owocki/emojibot/master/examples/howto.gif' />
 
+# Help Menu
+
+<img src='http://bits.owocki.com/0q1i460V1S0n/Image%202016-06-21%20at%2010.02.13%20AM.png' />
+
 # Setup
 
 1. Clone the repo, `git clone https://github.com/owocki/emojibot.git`
