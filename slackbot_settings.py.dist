@@ -1,0 +1,36 @@
+##################################################################
+# REQUIRED: Slack Config
+##################################################################
+
+## subdomain for your slack channel, e.g.: https://<team_name>.slack.com
+team_name = ''
+## get at https://<team_name>.slack.com/apps/manage/custom-integrations
+API_TOKEN = ""
+## get via 
+## 1. Using Google Chrome
+## 2. go to your slack channel in browser https://<team_name>.slack.com
+## 3. sign in.
+## 4. Open the "Inspect" window (right click, select "Inspect")
+## 5. Open the "Network" tab
+## 6. Select the "XHR" filter
+## 7. Select a request.  If no requests are available you may need to refresh.  Screenshot: http://bits.owocki.com/2D391v452w2F/Image%202016-06-21%20at%206.19.12%20AM.png
+## 8. Select the cookies string for that request.  Screenshot: http://bits.owocki.com/3T2E2z1I2v3h/Image%202016-06-21%20at%206.18.20%20AM.png
+## 9. You now have your 'cookie' value.  Paste it below! :point_down:
+cookie = ''
+
+##################################################################
+#OPTIONAL: bot config
+##################################################################
+
+## number of images to return per image search performed
+num_image_results = 5
+## append the following terms to searches.  e,g: if user inputs '@emojibot find cop', then a search for 'cop', 'cop emoji', 'cop cartoon' will be performed
+append_search_terms = ['', 'emoji', 'cartoon']
+
+#################################################################
+#NO TOUCHING!
+#################################################################
+PLUGINS = [
+    'emojibot.plugins',
+]
+DEFAULT_REPLY = "Sorry but I didn't understand you"
