@@ -17,7 +17,8 @@ Supports *all* of the below via slack. 👇
 4. Run `pip install -r requirements.txt`
 5. Run `cp slackbot_settings.py.dist slackbot_settings.py`
 6. Edit your `slackbot_settings.py`.  Follow instructions in that file for getting the required slack config values.
-7. Run the bot! 
+7. Run `setup.sh`
+8. Run the bot! 
 
 ```
 python run.py
