@@ -12,14 +12,14 @@ from emojibot.find_images import find
 
 @respond_to('help', re.IGNORECASE)
 def help(message):
-    help_message=" :wave: :robot_face: Hello! I'm @emjoibot, a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
+    help_message=" :wave: :robot_face: Hello! I'm @emojoibot, a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
         "  _Basic Commands:_  \n" +\
         "  :point_right:  `@emojibot get <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
         "  :point_right:  `@emojibot attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from `@emojibot get` and makes it an emoji.  \n" +\
         "  _Advanced Commands:_  \n" +\
         "  :point_right:   `@emojibot add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. \n" +\
         "  :cop:  :point_up: MUST CONFORM TO SLACKS EMOJI REQUIREMENTS: :point_right: `Square images work best. Image can't be larger than 128px in width or height, and must be smaller than 64K in file size.`\n" +\
-        " " 
+        "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
     message.send(help_message)
 
 @respond_to('add (.*) (.*)')
@@ -53,7 +53,7 @@ def get(message, keyword):
                 'fallback': text,
                 'author_name': title,
                 "author_icon": image,
-#                'author_link': image,
+                'author_link': image,
                 'text': text,
                 'color': color
             })
