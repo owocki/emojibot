@@ -74,7 +74,7 @@ def get(message, keyword):
 
 @respond_to('attach (.*) (.*)')
 def get(message, keyword, dict_key):
-    message.send(':robot_face: on it. give me a moment to :wizard: :slack: ')
+    message.send(':robot_face: on it. give me a moment to :ship::two: :slack: ')
     url = get_val_from_state(dict_key)
     if not url:
         message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@emojibot get` it?'.format(dict_key))
