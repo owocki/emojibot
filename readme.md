@@ -1,6 +1,10 @@
-# Emojibot
+# Emojibot 💩🤖🌈💨
 
-This is a bot that adds custom emojis to slack _via a slack command, NOT in the admin_.
+This is a bot that adds custom emojis to slack _via a slack command, NOT in the admin_.  👌
+
+Supports *all* of the below via slack. 👇
+1. Searching google images. 📷
+2. Uploading images to slack's (IMHO hard to find) emoji admin. 🚀
 
 <img src='https://raw.githubusercontent.com/owocki/emojibot/master/examples/howto.gif' />
 
@@ -31,6 +35,9 @@ num_image_results = 5
 append_search_terms = ['', 'emoji', 'cartoon']
 ```
 
+# Feedback
+
+[Tweet the author at @owocki](http://twitter.com/owocki)
 
 <!-- Google Analytics --> 
 <img src='https://ga-beacon.appspot.com/UA-1014419-15/owocki/emojibot' style='width:1px; height:1px;' >
