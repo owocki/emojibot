@@ -12,7 +12,7 @@ from emojibot.find_images import find
 
 @respond_to('help', re.IGNORECASE)
 def help(message):
-    help_message=" :wave: :robot_face: Hello! I'm @emjoibot, a slackbot for added emojis.   Here's how to use me: \n\n"+\
+    help_message=" :wave: :robot_face: Hello! I'm @emjoibot, a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
         "  _Basic Commands:_  \n" +\
         "  :point_right:  `@emojibot get <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
         "  :point_right:  `@emojibot attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from `@emojibot get` and makes it an emoji.  \n" +\
