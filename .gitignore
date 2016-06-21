@@ -1,2 +1,3 @@
 slackbot_settings.py
 static/
+state.json
