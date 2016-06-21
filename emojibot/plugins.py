@@ -87,6 +87,7 @@ def upload_emoji(message,keyword,url):
     #download file
     #file_path = 'static/' + os.path.basename(url)
     print('downloading file..')
+    keyword = keyword.lower()
     file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)])
     urllib.urlretrieve (url, file_path)
 
