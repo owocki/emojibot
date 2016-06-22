@@ -22,6 +22,7 @@ def help(message):
         "  -  `@"+bot_name+" <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
         "  -  `@"+bot_name+" more <keyword>` -- same as above, but shows more results.  \n" +\
         "  -  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from above commands, & makes it an emoji.  \n" +\
+        "  -  `@"+bot_name+" fastadd <keyword>` -- adds first image found as an emoji for keyword.  \n" +\
         "  _Advanced Commands:_  \n" +\
         "  -   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. Automatically resizes your :camera_with_flash: to 125px x 125px. \n" +\
         "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
@@ -31,20 +32,48 @@ def help(message):
 @respond_to('upload (.*) (.*)')
 def add_to_slack(message, keyword, url):
     print('got command upload')
-    message.reply('uploading.... ')
 
     #download image, make sure it is constrained to slacks requirements
+    print('- resziing')
     file_path = download_file(url)
     im = Image.open(file_path)
     im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
     im.save(file_path)
 
     #upload to slack
+    print('- uploading')
     upload_emoji(message,keyword,url=None,file_path=file_path)
 
     #cleanup
+    print('- gc')
     run_garbage_collector()
 
+@respond_to('fastadd (.*)')
+def fastadd(message, keyword):
+    print('got command fastadd')
+
+    #get an image
+    print('- searching')
+    images = find(keyword,10)
+    if len(images) == 0:
+        message.send('Could not find any suitable icons... :sheep: :robot_face:')
+        return
+    url = images[0]
+
+    #download image, make sure it is constrained to slacks requirements
+    print('- resziing')
+    file_path = download_file(url)
+    im = Image.open(file_path)
+    im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
+    im.save(file_path)
+
+    #upload to slack
+    print('- uploading')
+    upload_emoji(message,keyword,url=None,file_path=file_path)
+
+    #cleanup
+    print('- gc')
+    run_garbage_collector()
 
 @respond_to('(.*)')
 def get(message, keyword):
@@ -54,7 +83,7 @@ def get(message, keyword):
     large = False
     if not len(words):
         return
-    elif words[0] in ['upload','attach','add','help']:
+    elif words[0] in ['upload','attach','add','help', 'fastadd']:
         return
     elif words[0] in ['get','find']:
         words = words[1:]
@@ -66,16 +95,18 @@ def get(message, keyword):
 
     print('got command get {}'.format(keyword))
 
+    #config
     if not large:
         num_rows = small_num_image_rows
         num_columns = small_num_image_columns
     else:
         num_rows = large_num_image_rows
         num_columns = large_num_image_columns
-
     sanitized_keyword = re.sub(r'\W+', '', keyword)
     attachments = []
     k = 0
+
+    print('- searching')
     for append in append_search_terms:
         search_term = '{} {}'.format(keyword, append).strip()
         sanitized_search_terms = search_term.replace(' ','_')
@@ -103,6 +134,7 @@ def get(message, keyword):
             })
 
 
+    print('- validating')
     if len(attachments) == 0:
         message.send('Could not find any suitable icons... :sheep: :robot_face:')
     else:
@@ -149,6 +181,7 @@ def gen_master_image(attachments,keyword,num_rows,num_columns,enable_more):
 
     images = []
     hashes = []
+    print(' -- gen_master_image:downloading.. ')
     for attachment in attachments:
         url = attachment['author_icon']
         command = attachment['text']
@@ -167,6 +200,7 @@ def gen_master_image(attachments,keyword,num_rows,num_columns,enable_more):
     master_images = images
 
     #create new image
+    print(' -- gen_master_image:building image.. ')
     new_im = Image.new('RGB', (master_image_size_width,master_image_size_height), "white")
 
     #Iterate through a 4 by 4 grid with 100 spacing, to place my image
@@ -194,11 +228,11 @@ def gen_master_image(attachments,keyword,num_rows,num_columns,enable_more):
 
     comment = "To _attach an emoji_, use command `@"+bot_name+" attach {} IMG_REF`".format(keyword) + \
     ("\nTo _see more results_, use command `@"+bot_name+" more {}`".format(keyword) if enable_more else "")
-
     draw.text((0, y_pos + ((inner_image_size_height + buffer_size_height)) ),comment,"black",font=bottom_font)
     file_path = gen_file_path()
     new_im.save(file_path)
     garbage_collector.append(file_path)
+
     return file_path, rows, comment
 
 def gen_file_path():
