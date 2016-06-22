@@ -31,6 +31,9 @@ def help(message):
 @respond_to('add (.*) (.*)')
 @respond_to('upload (.*) (.*)')
 def add_to_slack(message, keyword, url):
+    if message.body['text'].split(' ')[0] == 'fastadd':
+        return
+        
     print('got command upload')
 
     #download image, make sure it is constrained to slacks requirements
@@ -42,7 +45,8 @@ def add_to_slack(message, keyword, url):
 
     #upload to slack
     print('- uploading')
-    upload_emoji(message,keyword,url=None,file_path=file_path)
+    sanitized_keyword = re.sub(r'\W+', '', keyword)
+    upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
 
     #cleanup
     print('- gc')
@@ -69,7 +73,8 @@ def fastadd(message, keyword):
 
     #upload to slack
     print('- uploading')
-    upload_emoji(message,keyword,url=None,file_path=file_path)
+    sanitized_keyword = re.sub(r'\W+', '', keyword)
+    upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
 
     #cleanup
     print('- gc')
@@ -161,7 +166,8 @@ def attach(message, keyword, dict_key):
     if not url:
         message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@'+bot_name+' get` it?'.format(dict_key))
     else:
-        upload_emoji(message,keyword,url)
+        sanitized_keyword = re.sub(r'\W+', '', keyword)
+        upload_emoji(message,sanitized_keyword,url)
     run_garbage_collector()
 
 
