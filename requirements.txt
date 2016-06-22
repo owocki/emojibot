@@ -3,3 +3,6 @@ bs4==0.0.1
 PIL
 lxml
 cssselect
+pyopenssl 
+ndg-httpsclient 
+pyasn1
