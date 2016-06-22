@@ -4,6 +4,8 @@
 
 ## subdomain for your slack channel, e.g.: https://<team_name>.slack.com
 team_name = ''
+## your bots username in slack
+bot_name = 'emojibot'
 ## get at https://<team_name>.slack.com/apps/manage/custom-integrations
 API_TOKEN = ""
 ## get via 

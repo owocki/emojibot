@@ -15,7 +15,7 @@ def find(keyword, num):
     query = keyword
     query= query.split()
     query='+'.join(query)
-    url="https://www.google.co.in/search?q="+query+"&source=lnms&tbm=isch"
+    url="https://www.google.com/search?q="+query+"&source=lnms&tbm=isch"
     url+="&tbs=isz:i" #icon size only
     header = {'User-Agent': 'Mozilla/5.0'} 
     soup = get_soup(url,header)

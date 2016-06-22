@@ -9,49 +9,75 @@ from PIL import Image, ImageFont, ImageDraw
 
 from slackbot.bot import respond_to
 from emojibot.upload import do_upload
-from slackbot_settings import append_search_terms, fontname, num_image_columns, num_image_rows
+from slackbot_settings import append_search_terms, fontname, num_image_columns, num_image_rows, bot_name
 from emojibot.find_images import find
 
+garbage_collector = []
 
 @respond_to('help', re.IGNORECASE)
 def help(message):
-    help_message=" :wave: :robot_face: Hello! I'm @emojoibot, a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
+    print('got command help')
+    help_message=" :wave: :robot_face: Hello! I'm @"+bot_name+", a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
         "  _Basic Commands:_  \n" +\
-        "  :point_right:  `@emojibot get <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
-        "  :point_right:  `@emojibot attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from `@emojibot get` and makes it an emoji.  \n" +\
+        "  :point_right:  `@"+bot_name+" get <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
+        "  :point_right:  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from `@"+bot_name+" get` and makes it an emoji.  \n" +\
         "  _Advanced Commands:_  \n" +\
-        "  :point_right:   `@emojibot add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. \n" +\
-        "  :cop:  :point_up: MUST CONFORM TO SLACKS EMOJI REQUIREMENTS: :point_right: `Square images work best. Image can't be larger than 128px in width or height, and must be smaller than 64K in file size.`\n" +\
+        "  :point_right:   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. \n" +\
         "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
     message.send(help_message)
 
 @respond_to('add (.*) (.*)')
-def giveme(message, keyword, url):
+@respond_to('upload (.*) (.*)')
+def add_to_slack(message, keyword, url):
+    print('got command upload')
     message.reply('uploading.... ')
 
-    upload_emoji(message,keyword,url)
+    #download image, make sure it is constrained to slacks requirements
+    file_path = download_file(url)
+    im = Image.open(file_path)
+    im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
+    im.save(file_path)
+
+    #upload to slack
+    upload_emoji(message,keyword,url=None,file_path=file_path)
+
+    #cleanup
+    run_garbage_collector()
 
 
-@respond_to('get (.*)')
-@respond_to('find (.*)')
+@respond_to('(.*)')
 def get(message, keyword):
+
+    print('catchall {}'.format(keyword))
+    words = keyword.split(' ')
+    if not len(words):
+        return
+    elif words[0] in ['upload','attach','add','help']:
+        return
+    elif words[0] in ['get','find']:
+        words = words[1:]
+        keyword = " ".join(words)
+
+    print('got command get {}'.format(keyword))
+
     sanitized_keyword = re.sub(r'\W+', '', keyword)
     attachments = []
-    message.reply(':robot_face: finding emojis for keyword `{}` ....'.format(keyword))
     k = 0
     for append in append_search_terms:
         search_term = '{} {}'.format(keyword, append).strip()
         sanitized_search_terms = search_term.replace(' ','_')
+        print(' - searching {}'.format(search_term))
         # column x row grid, with 1.2 buffer for dupe images, divided by number of searches we'll do
         num_images = int((num_image_columns * num_image_rows * 1.2) / len(append_search_terms) ) 
         images = find(search_term,num_images)
+        print(' - got {} images'.format(len(images)))
         i = 0
         for image in images:
             i = i + 1
             k = k + 1
             color = "#e6e6e6" if k % 2 else '#59afe1'
             attach_keyword = "{}_{}".format(sanitized_search_terms,i)
-            command = "@emojibot attach {} {}".format(sanitized_keyword,attach_keyword)
+            command = "@"+bot_name+" attach {} {}".format(sanitized_keyword,attach_keyword)
             title = "{} no. {}".format(search_term,i)
             text = "{}".format(command)
             attachments.append({
@@ -67,6 +93,7 @@ def get(message, keyword):
     if len(attachments) == 0:
         message.send('Could not find any suitable icons... :sheep: :robot_face:')
     else:
+        print(' - generating {} master image'.format(keyword))
         file_path, rows, comment = gen_master_image(attachments,keyword)
         message.channel.upload_file('Emoji options', file_path, comment)
 
@@ -79,16 +106,19 @@ def get(message, keyword):
                 }
                 myfile.write(json.dumps(row_json)+"\n")
 
+    run_garbage_collector()
 
 
 @respond_to('attach (.*) (.*)')
-def get(message, keyword, dict_key):
-    message.send(':robot_face: on it. give me a moment to :ship::two: :slack: ')
+def attach(message, keyword, dict_key):
+    print('got command attach')
     url = get_val_from_state(dict_key)
     if not url:
-        message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@emojibot get` it?'.format(dict_key))
+        message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@'+bot_name+' get` it?'.format(dict_key))
     else:
         upload_emoji(message,keyword,url)
+    run_garbage_collector()
+
 
 #helper messages
 
@@ -113,8 +143,7 @@ def gen_master_image(attachments,keyword):
         command = attachment['text']
 
         #get file from remote
-        file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)])
-        urllib.urlretrieve (url, file_path)
+        file_path = download_file(url)
         im = Image.open(file_path)
 
         #check for uniqueness, only add if unique
@@ -149,25 +178,48 @@ def gen_master_image(attachments,keyword):
                 draw.text((x_pos, y_pos + inner_image_size_height),img_key,"black",font=font)
                 rows.append({'key':img_key,'value': url})
             except Exception as e:
-                print(e)
+                print(" --(e) -- "+str(e))
                 images = master_images
 
-    comment = "To attach an emoji, use command `@emojibot attach {} [IMG_REFERENCE]`".format(keyword)
+    comment = "To attach an emoji, use command `@"+bot_name+" attach {} [IMG_REFERENCE]`".format(keyword)
     draw.text((0, y_pos + ((inner_image_size_height + buffer_size_height)) ),comment,"black",font=bottom_font)
-    file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)]) + ".png"
+    file_path = gen_file_path()
     new_im.save(file_path)
+    garbage_collector.append(file_path)
     return file_path, rows, comment
 
-def upload_emoji(message,keyword,url):
+def gen_file_path():
+    file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)]) + ".png"
+    return file_path
+
+def run_garbage_collector():
+    try:
+        while True:
+            file_path = garbage_collector.pop()
+            os.remove(file_path)
+    except:
+        pass;
+
+
+
+def download_file(url):
+    file_path = gen_file_path()
+    urllib.urlretrieve (url, file_path)
+    garbage_collector.append(file_path)
+    return file_path
+
+def upload_emoji(message,keyword,url=None,file_path=None):
     #download file
     #file_path = 'static/' + os.path.basename(url)
-    print('downloading file..')
+    print(' -- downloading file..')
     keyword = keyword.lower()
-    file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)])
-    urllib.urlretrieve (url, file_path)
+    if url is not None and file_path is None:
+        file_path = download_file(url)
+        urllib.urlretrieve (url, file_path)
+
 
     #send to slack
-    print('uploading file..')
+    print(' -- uploading file..')
     errors = []
     try:
         errors = do_upload(file_path,keyword)
@@ -183,7 +235,7 @@ def upload_emoji(message,keyword,url):
 
 
 def get_val_from_state(keyword):
-    print('looking at db..')
+    print(' -- looking at db..')
     with open("state.json", "r") as myfile:
         lines = myfile.readlines()
         lines.reverse()

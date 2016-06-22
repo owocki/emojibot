@@ -9,7 +9,7 @@ url = "https://{}.slack.com/customize/emoji".format(team_name)
 
 def do_upload(filename, emoji_name):
 
-    print("Processing {}.".format(filename))
+    print(" ---- processing upload to slack, {}.".format(filename))
 
     headers = {
         'Cookie': cookie,
@@ -18,7 +18,7 @@ def do_upload(filename, emoji_name):
     # Fetch the form first, to generate a crumb.
     r = requests.get(url, headers=headers)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text,'lxml')
     crumb = soup.find("input", attrs={"name": "crumb"})["value"]
 
     data = {
@@ -31,6 +31,6 @@ def do_upload(filename, emoji_name):
     r = requests.post(url, headers=headers, data=data, files=files, allow_redirects=False)
     if r.status_code != 200:
         return ['Could not authenticate you.  Check your `team_name` and  `cookie` settings. ']
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text,'lxml')
     errors = [ele.text for ele in soup.findAll('p', attrs={'class':'alert'})]
     return errors
