@@ -3,6 +3,7 @@ import os
 import urllib
 import random
 import json
+from PIL import Image, ImageFont, ImageDraw
 
 from slackbot.bot import respond_to
 from emojibot.upload import do_upload
@@ -58,19 +59,23 @@ def get(message, keyword):
                 'color': color
             })
 
-            # save to file state
-            with open("state.json", "a") as myfile:
-                row_json = {
-                    'key' : attach_keyword.strip(),
-                    'value' : image,
-                }
-                myfile.write(json.dumps(row_json)+"\n")
 
     if len(attachments) == 0:
         message.send('Could not find any suitable icons... :sheep: :robot_face:')
     else:
-        message.send('Here are your options..')
-        message.send_webapi('', json.dumps(attachments))
+        file_path, rows, comment = gen_master_image(attachments,keyword)
+        message.channel.upload_file('Emoji options', file_path, comment)
+
+        # save to file state
+        with open("state.json", "a") as myfile:
+            for row in rows:
+                row_json = {
+                    'key' : row['key'],
+                    'value' : row['value'],
+                }
+                myfile.write(json.dumps(row_json)+"\n")
+
+
 
 @respond_to('attach (.*) (.*)')
 def get(message, keyword, dict_key):
@@ -82,6 +87,57 @@ def get(message, keyword, dict_key):
         upload_emoji(message,keyword,url)
 
 #helper messages
+
+def gen_master_image(attachments,keyword):
+
+    font = ImageFont.truetype("Arial.ttf", 12)
+    bottom_font = ImageFont.truetype("Arial.ttf", 16)
+    inner_image_size_width = 50
+    inner_image_size_height = 50
+    buffer_size_height = 20
+    buffer_size_width = 5
+    num_rows = 6
+    num_columns = 12
+    master_image_size_width = ((inner_image_size_width + buffer_size_width) * num_columns )
+    master_image_size_height = ((inner_image_size_height + buffer_size_height) * num_rows )
+
+    images = []
+    for attachment in attachments:
+        url = attachment['author_icon']
+        command = attachment['text']
+        file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)])
+        urllib.urlretrieve (url, file_path)
+        im = Image.open(file_path)
+        images.append((im,url))
+    master_images = images
+
+    #create new image
+    new_im = Image.new('RGB', (master_image_size_width,master_image_size_height), "white")
+
+    #Iterate through a 4 by 4 grid with 100 spacing, to place my image
+    rows = []
+    for row in range(0,num_rows):
+        for column in range(0,num_columns):
+            #paste the image at location i,j:
+            try:
+                im, url = images.pop()
+                x_pos = column * (inner_image_size_width + buffer_size_width)
+                y_pos = row * (inner_image_size_height + buffer_size_height)
+                #resize opened image 
+                im.thumbnail((inner_image_size_width,inner_image_size_height))
+                new_im.paste(im, (x_pos,y_pos))
+                draw = ImageDraw.Draw(new_im)
+                img_key = "{}{}x{}".format(keyword[0:3],row,column)
+                draw.text((x_pos, y_pos + inner_image_size_height),img_key,"black",font=font)
+                rows.append({'key':img_key,'value': url})
+            except:
+                images = master_images
+
+    comment = "To attach an emoji, use command `@emojibot attach {} [IMG_REFERENCE]`".format(keyword)
+    draw.text((0, y_pos + ((inner_image_size_height + buffer_size_height)) ),comment,"black",font=bottom_font)
+    file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)]) + ".png"
+    new_im.save(file_path)
+    return file_path, rows, comment
 
 def upload_emoji(message,keyword,url):
     #download file
@@ -111,6 +167,7 @@ def get_val_from_state(keyword):
     print('looking at db..')
     with open("state.json", "r") as myfile:
         lines = myfile.readlines()
+        lines.reverse()
         for line in lines:
             row = json.loads(line)
             if row['key'] == keyword.strip():

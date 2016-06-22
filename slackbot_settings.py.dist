@@ -23,9 +23,9 @@ cookie = ''
 ##################################################################
 
 ## number of images to return per image search performed
-num_image_results = 3
+num_image_results = 50
 ## append the following terms to searches.  e,g: if user inputs '@emojibot find cop', then a search for 'cop', 'cop emoji', 'cop cartoon' will be performed
-append_search_terms = ['', 'emoji', 'cartoon']
+append_search_terms = ['', 'emoji', 'cartoon', 'icon']
 
 #################################################################
 #NO TOUCHING!
