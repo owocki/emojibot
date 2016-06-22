@@ -9,7 +9,7 @@ import os
 def find(keyword, num):
 
     def get_soup(url,header):
-      return BeautifulSoup(urllib2.urlopen(urllib2.Request(url,headers=header)))
+      return BeautifulSoup(urllib2.urlopen(urllib2.Request(url,headers=header)),'lxml')
 
     image_type = "Action"
     query = keyword

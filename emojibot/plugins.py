@@ -3,11 +3,13 @@ import os
 import urllib
 import random
 import json
+import PIL
+import hashlib
 from PIL import Image, ImageFont, ImageDraw
 
 from slackbot.bot import respond_to
 from emojibot.upload import do_upload
-from slackbot_settings import num_image_results, append_search_terms, fontname
+from slackbot_settings import append_search_terms, fontname, num_image_columns, num_image_rows
 from emojibot.find_images import find
 
 
@@ -38,9 +40,11 @@ def get(message, keyword):
     message.reply(':robot_face: finding emojis for keyword `{}` ....'.format(keyword))
     k = 0
     for append in append_search_terms:
-        search_term = '{} {}'.format(keyword, append)
+        search_term = '{} {}'.format(keyword, append).strip()
         sanitized_search_terms = search_term.replace(' ','_')
-        images = find(search_term,num_image_results)
+        # column x row grid, with 1.2 buffer for dupe images, divided by number of searches we'll do
+        num_images = int((num_image_columns * num_image_rows * 1.2) / len(append_search_terms) ) 
+        images = find(search_term,num_images)
         i = 0
         for image in images:
             i = i + 1
@@ -90,25 +94,36 @@ def get(message, keyword, dict_key):
 
 def gen_master_image(attachments,keyword):
 
+    #config
     font = ImageFont.truetype(fontname, 12)
     bottom_font = ImageFont.truetype(fontname, 16)
     inner_image_size_width = 50
     inner_image_size_height = 50
     buffer_size_height = 20
     buffer_size_width = 5
-    num_rows = 6
-    num_columns = 12
+    num_rows = num_image_rows
+    num_columns = num_image_columns
     master_image_size_width = ((inner_image_size_width + buffer_size_width) * num_columns )
     master_image_size_height = ((inner_image_size_height + buffer_size_height) * num_rows )
 
     images = []
+    hashes = []
     for attachment in attachments:
         url = attachment['author_icon']
         command = attachment['text']
+
+        #get file from remote
         file_path = 'static/' + "".join([random.choice('abcdefghijklmnopqrstuvwxyz11234567890') for _ in range(40)])
         urllib.urlretrieve (url, file_path)
         im = Image.open(file_path)
-        images.append((im,url))
+
+        #check for uniqueness, only add if unique
+        image_file = open(file_path).read()
+        _hash = hashlib.md5(image_file).hexdigest()
+        if _hash not in hashes:
+            images.append((im,url))
+            hashes.append(_hash)
+    images.reverse()
     master_images = images
 
     #create new image
@@ -121,6 +136,9 @@ def gen_master_image(attachments,keyword):
             #paste the image at location i,j:
             try:
                 im, url = images.pop()
+                width, height = im.size
+                if width < inner_image_size_width:
+                    im = im.resize((inner_image_size_width, inner_image_size_height),resample=PIL.Image.ANTIALIAS)
                 x_pos = column * (inner_image_size_width + buffer_size_width)
                 y_pos = row * (inner_image_size_height + buffer_size_height)
                 #resize opened image 
@@ -130,7 +148,8 @@ def gen_master_image(attachments,keyword):
                 img_key = "{}{}x{}".format(keyword[0:3],row,column)
                 draw.text((x_pos, y_pos + inner_image_size_height),img_key,"black",font=font)
                 rows.append({'key':img_key,'value': url})
-            except:
+            except Exception as e:
+                print(e)
                 images = master_images
 
     comment = "To attach an emoji, use command `@emojibot attach {} [IMG_REFERENCE]`".format(keyword)
