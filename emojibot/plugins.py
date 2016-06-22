@@ -16,162 +16,178 @@ garbage_collector = []
 
 @respond_to('help', re.IGNORECASE)
 def help(message):
-    print('got command help')
-    help_message=" :wave: :robot_face: Hello! I'm @"+bot_name+", a slackbot for adding emojis to your slack team _easily_..   Here's how I work: \n\n"+\
-        "  _Basic Commands:_  \n" +\
-        "  -  `@"+bot_name+" <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
-        "  -  `@"+bot_name+" more <keyword>` -- same as above, but shows more results.  \n" +\
-        "  -  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from above commands, & makes it an emoji.  \n" +\
-        "  -  `@"+bot_name+" fastadd <keyword>` -- adds first image found as an emoji for keyword.  \n" +\
-        "  _Advanced Commands:_  \n" +\
-        "  -   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. Automatically resizes your :camera_with_flash: to 125px x 125px. \n" +\
-        "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
-    message.send(help_message)
+    try:
+        print('got command help')
+        help_message=" :wave: :robot_face: Hello! I'm @"+bot_name+", a slackbot for adding emojis to your slack team _easily_..   Here's how I work: \n\n"+\
+            "  _Basic Commands:_  \n" +\
+            "  -  `@"+bot_name+" <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
+            "  -  `@"+bot_name+" more <keyword>` -- same as above, but shows more results.  \n" +\
+            "  -  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from above commands, & makes it an emoji.  \n" +\
+            "  -  `@"+bot_name+" fastadd <keyword>` -- adds first image found as an emoji for keyword.  \n" +\
+            "  _Advanced Commands:_  \n" +\
+            "  -   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. Automatically resizes your :camera_with_flash: to 125px x 125px. \n" +\
+            "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
+        message.send(help_message)
+    except Exception as e:
+        handle_exception(message,e)
 
 @respond_to('add (.*) (.*)')
 @respond_to('upload (.*) (.*)')
 def add_to_slack(message, keyword, url):
-    if message.body['text'].split(' ')[0] == 'fastadd':
-        return
-        
-    print('got command upload')
+    try:
+        if message.body['text'].split(' ')[0] == 'fastadd':
+            return
 
-    #download image, make sure it is constrained to slacks requirements
-    print('- resziing')
-    file_path = download_file(url)
-    im = Image.open(file_path)
-    im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
-    im.save(file_path)
+        print('got command upload')
 
-    #upload to slack
-    print('- uploading')
-    sanitized_keyword = re.sub(r'\W+', '', keyword)
-    upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
+        #download image, make sure it is constrained to slacks requirements
+        print('- resziing')
+        file_path = download_file(url)
+        im = Image.open(file_path)
+        im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
+        im.save(file_path)
 
-    #cleanup
-    print('- gc')
-    run_garbage_collector()
+        #upload to slack
+        print('- uploading')
+        sanitized_keyword = re.sub(r'\W+', '', keyword)
+        upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
+
+        #cleanup
+        print('- gc')
+        run_garbage_collector()
+    except Exception as e:
+        handle_exception(message,e)
 
 @respond_to('fastadd (.*)')
 def fastadd(message, keyword):
-    print('got command fastadd')
+    try:
+        print('got command fastadd')
 
-    #get an image
-    print('- searching')
-    images = find(keyword,10)
-    if len(images) == 0:
-        message.send('Could not find any suitable icons... :sheep: :robot_face:')
-        return
-    url = images[0]
+        #get an image
+        print('- searching')
+        images = find(keyword,10)
+        if len(images) == 0:
+            message.send('Could not find any suitable icons... :sheep: :robot_face:')
+            return
+        url = images[0]
 
-    #download image, make sure it is constrained to slacks requirements
-    print('- resziing')
-    file_path = download_file(url)
-    im = Image.open(file_path)
-    im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
-    im.save(file_path)
+        #download image, make sure it is constrained to slacks requirements
+        print('- resziing')
+        file_path = download_file(url)
+        im = Image.open(file_path)
+        im = im.resize((125, 125),resample=PIL.Image.ANTIALIAS)
+        im.save(file_path)
 
-    #upload to slack
-    print('- uploading')
-    sanitized_keyword = re.sub(r'\W+', '', keyword)
-    upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
+        #upload to slack
+        print('- uploading')
+        sanitized_keyword = re.sub(r'\W+', '', keyword)
+        upload_emoji(message,sanitized_keyword,url=None,file_path=file_path)
 
-    #cleanup
-    print('- gc')
-    run_garbage_collector()
+        #cleanup
+        print('- gc')
+        run_garbage_collector()
+    except Exception as e:
+        handle_exception(message,e)
+
 
 @respond_to('(.*)')
 def get(message, keyword):
+    try:
+        print('catchall {}'.format(keyword))
+        words = keyword.split(' ')
+        large = False
+        if not len(words):
+            return
+        elif words[0] in ['upload','attach','add','help', 'fastadd']:
+            return
+        elif words[0] in ['get','find']:
+            words = words[1:]
+            keyword = " ".join(words)
+        elif words[0] in ['more','options']:
+            words = words[1:]
+            keyword = " ".join(words)
+            large = True
 
-    print('catchall {}'.format(keyword))
-    words = keyword.split(' ')
-    large = False
-    if not len(words):
-        return
-    elif words[0] in ['upload','attach','add','help', 'fastadd']:
-        return
-    elif words[0] in ['get','find']:
-        words = words[1:]
-        keyword = " ".join(words)
-    elif words[0] in ['more','options']:
-        words = words[1:]
-        keyword = " ".join(words)
-        large = True
+        print('got command get {}'.format(keyword))
 
-    print('got command get {}'.format(keyword))
+        #config
+        if not large:
+            num_rows = small_num_image_rows
+            num_columns = small_num_image_columns
+        else:
+            num_rows = large_num_image_rows
+            num_columns = large_num_image_columns
+        sanitized_keyword = re.sub(r'\W+', '', keyword)
+        attachments = []
+        k = 0
 
-    #config
-    if not large:
-        num_rows = small_num_image_rows
-        num_columns = small_num_image_columns
-    else:
-        num_rows = large_num_image_rows
-        num_columns = large_num_image_columns
-    sanitized_keyword = re.sub(r'\W+', '', keyword)
-    attachments = []
-    k = 0
-
-    print('- searching')
-    for append in append_search_terms:
-        search_term = '{} {}'.format(keyword, append).strip()
-        sanitized_search_terms = search_term.replace(' ','_')
-        print(' - searching {}'.format(search_term))
-        # column x row grid, with 1.2 buffer for dupe images, divided by number of searches we'll do
-        num_images = int((num_columns * num_rows * 1.2) / len(append_search_terms) ) 
-        images = find(search_term,num_images)
-        print(' - got {} images'.format(len(images)))
-        i = 0
-        for image in images:
-            i = i + 1
-            k = k + 1
-            color = "#e6e6e6" if k % 2 else '#59afe1'
-            attach_keyword = "{}_{}".format(sanitized_search_terms,i)
-            command = "@"+bot_name+" attach {} {}".format(sanitized_keyword,attach_keyword)
-            title = "{} no. {}".format(search_term,i)
-            text = "{}".format(command)
-            attachments.append({
-                'fallback': text,
-                'author_name': title,
-                "author_icon": image,
-                'author_link': image,
-                'text': text,
-                'color': color
-            })
+        print('- searching')
+        for append in append_search_terms:
+            search_term = '{} {}'.format(keyword, append).strip()
+            sanitized_search_terms = search_term.replace(' ','_')
+            print(' - searching {}'.format(search_term))
+            # column x row grid, with 1.2 buffer for dupe images, divided by number of searches we'll do
+            num_images = int((num_columns * num_rows * 1.2) / len(append_search_terms) ) 
+            images = find(search_term,num_images)
+            print(' - got {} images'.format(len(images)))
+            i = 0
+            for image in images:
+                i = i + 1
+                k = k + 1
+                color = "#e6e6e6" if k % 2 else '#59afe1'
+                attach_keyword = "{}_{}".format(sanitized_search_terms,i)
+                command = "@"+bot_name+" attach {} {}".format(sanitized_keyword,attach_keyword)
+                title = "{} no. {}".format(search_term,i)
+                text = "{}".format(command)
+                attachments.append({
+                    'fallback': text,
+                    'author_name': title,
+                    "author_icon": image,
+                    'author_link': image,
+                    'text': text,
+                    'color': color
+                })
 
 
-    print('- validating')
-    if len(attachments) == 0:
-        message.send('Could not find any suitable icons... :sheep: :robot_face:')
-    else:
-        print(' - generating {} master image'.format(keyword))
-        file_path, rows, comment = gen_master_image(attachments,keyword,num_rows,num_columns,not large)
-        message.channel.upload_file('Emoji options', file_path, comment)
+        print('- validating')
+        if len(attachments) == 0:
+            message.send('Could not find any suitable icons... :sheep: :robot_face:')
+        else:
+            print(' - generating {} master image'.format(keyword))
+            file_path, rows, comment = gen_master_image(attachments,keyword,num_rows,num_columns,not large)
+            message.channel.upload_file('Emoji options', file_path, comment)
 
-        # save to file state
-        with open("state.json", "a") as myfile:
-            for row in rows:
-                row_json = {
-                    'key' : row['key'],
-                    'value' : row['value'],
-                }
-                myfile.write(json.dumps(row_json)+"\n")
+            # save to file state
+            with open("state.json", "a") as myfile:
+                for row in rows:
+                    row_json = {
+                        'key' : row['key'],
+                        'value' : row['value'],
+                    }
+                    myfile.write(json.dumps(row_json)+"\n")
 
-    run_garbage_collector()
+        run_garbage_collector()
+    except Exception as e:
+        handle_exception(message,e)
 
 
 @respond_to('attach (.*) (.*)')
 def attach(message, keyword, dict_key):
-    print('got command attach')
-    url = get_val_from_state(dict_key)
-    if not url:
-        message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@'+bot_name+' get` it?'.format(dict_key))
-    else:
-        sanitized_keyword = re.sub(r'\W+', '', keyword)
-        upload_emoji(message,sanitized_keyword,url)
-    run_garbage_collector()
+    try:
+        print('got command attach')
+        url = get_val_from_state(dict_key)
+        if not url:
+            message.reply(':sheep: :robot_face: could not find a recent image for `{}`  ...  did you `@'+bot_name+' get` it?'.format(dict_key))
+        else:
+            sanitized_keyword = re.sub(r'\W+', '', keyword)
+            upload_emoji(message,sanitized_keyword,url)
+        run_garbage_collector()
+    except Exception as e:
+        handle_exception(message,e)
 
-
+###################################################
 #helper messages
+###################################################
 
 def gen_master_image(attachments,keyword,num_rows,num_columns,enable_more):
 
@@ -285,6 +301,13 @@ def upload_emoji(message,keyword,url=None,file_path=None):
             message.reply('Slack replied with unknown error.')
         else:
             message.reply('Slack replied with the following errors: \n \n {}.'.format("\n".join(errors)))
+
+def handle_exception(message, e):
+    if True:
+        message.reply('Unknown error.  Please submit an issue (with a screenshot of your chat window) @ https://github.com/owocki/emojibot/issues')
+    else:
+        print(e)
+
 
 
 def get_val_from_state(keyword):
