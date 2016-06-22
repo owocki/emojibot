@@ -18,6 +18,8 @@ API_TOKEN = ""
 ## 9. You now have your 'cookie' value.  Paste it below! :point_down:
 cookie = ''
 #font name: a font that's installed on your system
+#On a mac: Arial.ttf
+#On ubuntu: DejaVuSerif.ttf
 fontname = "Arial.ttf"
 
 
