@@ -9,7 +9,7 @@ from PIL import Image, ImageFont, ImageDraw
 
 from slackbot.bot import respond_to
 from emojibot.upload import do_upload
-from slackbot_settings import append_search_terms, fontname, num_image_columns, num_image_rows, bot_name
+from slackbot_settings import append_search_terms, fontname, bot_name,small_num_image_rows, small_num_image_columns, large_num_image_rows, large_num_image_columns
 from emojibot.find_images import find
 
 garbage_collector = []
@@ -17,12 +17,13 @@ garbage_collector = []
 @respond_to('help', re.IGNORECASE)
 def help(message):
     print('got command help')
-    help_message=" :wave: :robot_face: Hello! I'm @"+bot_name+", a slackbot for adding emojis to your slack team _easily_..   Here's how to use me: \n\n"+\
+    help_message=" :wave: :robot_face: Hello! I'm @"+bot_name+", a slackbot for adding emojis to your slack team _easily_..   Here's how I work: \n\n"+\
         "  _Basic Commands:_  \n" +\
-        "  :point_right:  `@"+bot_name+" get <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
-        "  :point_right:  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from `@"+bot_name+" get` and makes it an emoji.  \n" +\
+        "  -  `@"+bot_name+" <keyword>` -- searches the internets for images, recommends emojis, which you can then add to your slack team.  \n" +\
+        "  -  `@"+bot_name+" more <keyword>` -- same as above, but shows more results.  \n" +\
+        "  -  `@"+bot_name+" attach <keyword> <image_name>` -- takes a :camera_with_flash:  you got from above commands, & makes it an emoji.  \n" +\
         "  _Advanced Commands:_  \n" +\
-        "  :point_right:   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. \n" +\
+        "  -   `@"+bot_name+" add <keyword> <url>` -- adds <url> as an an emoji with your desired keyword. Automatically resizes your :camera_with_flash: to 125px x 125px. \n" +\
         "   :paperclip: More details @ `http://github.com/owocki/emojibot` " 
     message.send(help_message)
 
@@ -50,6 +51,7 @@ def get(message, keyword):
 
     print('catchall {}'.format(keyword))
     words = keyword.split(' ')
+    large = False
     if not len(words):
         return
     elif words[0] in ['upload','attach','add','help']:
@@ -57,8 +59,19 @@ def get(message, keyword):
     elif words[0] in ['get','find']:
         words = words[1:]
         keyword = " ".join(words)
+    elif words[0] in ['more','options']:
+        words = words[1:]
+        keyword = " ".join(words)
+        large = True
 
     print('got command get {}'.format(keyword))
+
+    if not large:
+        num_rows = small_num_image_rows
+        num_columns = small_num_image_columns
+    else:
+        num_rows = large_num_image_rows
+        num_columns = large_num_image_columns
 
     sanitized_keyword = re.sub(r'\W+', '', keyword)
     attachments = []
@@ -68,7 +81,7 @@ def get(message, keyword):
         sanitized_search_terms = search_term.replace(' ','_')
         print(' - searching {}'.format(search_term))
         # column x row grid, with 1.2 buffer for dupe images, divided by number of searches we'll do
-        num_images = int((num_image_columns * num_image_rows * 1.2) / len(append_search_terms) ) 
+        num_images = int((num_columns * num_rows * 1.2) / len(append_search_terms) ) 
         images = find(search_term,num_images)
         print(' - got {} images'.format(len(images)))
         i = 0
@@ -94,7 +107,7 @@ def get(message, keyword):
         message.send('Could not find any suitable icons... :sheep: :robot_face:')
     else:
         print(' - generating {} master image'.format(keyword))
-        file_path, rows, comment = gen_master_image(attachments,keyword)
+        file_path, rows, comment = gen_master_image(attachments,keyword,num_rows,num_columns,not large)
         message.channel.upload_file('Emoji options', file_path, comment)
 
         # save to file state
@@ -122,7 +135,7 @@ def attach(message, keyword, dict_key):
 
 #helper messages
 
-def gen_master_image(attachments,keyword):
+def gen_master_image(attachments,keyword,num_rows,num_columns,enable_more):
 
     #config
     font = ImageFont.truetype(fontname, 12)
@@ -131,8 +144,6 @@ def gen_master_image(attachments,keyword):
     inner_image_size_height = 50
     buffer_size_height = 20
     buffer_size_width = 5
-    num_rows = num_image_rows
-    num_columns = num_image_columns
     master_image_size_width = ((inner_image_size_width + buffer_size_width) * num_columns )
     master_image_size_height = ((inner_image_size_height + buffer_size_height) * num_rows )
 
@@ -181,7 +192,9 @@ def gen_master_image(attachments,keyword):
                 print(" --(e) -- "+str(e))
                 images = master_images
 
-    comment = "To attach an emoji, use command `@"+bot_name+" attach {} [IMG_REFERENCE]`".format(keyword)
+    comment = "To _attach an emoji_, use command `@"+bot_name+" attach {} IMG_REF`".format(keyword) + \
+    ("\nTo _see more results_, use command `@"+bot_name+" more {}`".format(keyword) if enable_more else "")
+
     draw.text((0, y_pos + ((inner_image_size_height + buffer_size_height)) ),comment,"black",font=bottom_font)
     file_path = gen_file_path()
     new_im.save(file_path)
