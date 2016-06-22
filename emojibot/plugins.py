@@ -7,7 +7,7 @@ from PIL import Image, ImageFont, ImageDraw
 
 from slackbot.bot import respond_to
 from emojibot.upload import do_upload
-from slackbot_settings import num_image_results, append_search_terms
+from slackbot_settings import num_image_results, append_search_terms, fontname
 from emojibot.find_images import find
 
 
@@ -90,8 +90,8 @@ def get(message, keyword, dict_key):
 
 def gen_master_image(attachments,keyword):
 
-    font = ImageFont.truetype("Arial.ttf", 12)
-    bottom_font = ImageFont.truetype("Arial.ttf", 16)
+    font = ImageFont.truetype(fontname, 12)
+    bottom_font = ImageFont.truetype(fontname, 16)
     inner_image_size_width = 50
     inner_image_size_height = 50
     buffer_size_height = 20
