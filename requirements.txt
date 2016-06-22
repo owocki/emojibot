@@ -1,4 +1,5 @@
 slackbot==0.4.1
 bs4==0.0.1
 PIL
-
+lxml
+cssselect

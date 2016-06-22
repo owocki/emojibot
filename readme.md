@@ -22,10 +22,22 @@ Supports *all* of the below via slack. 👇
 5. Run `cp slackbot_settings.py.dist slackbot_settings.py`
 6. Edit your `slackbot_settings.py`.  Follow instructions in that file for getting the required slack config values.
 7. Run `setup.sh`
-8. Run the bot! 
+8. Run the bot!  `python run.py`
 
 ```
 python run.py
+```
+
+## Ubuntu
+
+I run my jobs on Ubuntu.  This may help you if you do too:
+
+```
+#Pillow
+apt-get install libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python-tk
+#libXML
+apt-get install libxslt1-dev libxml2
+
 ```
 
 # Optional Config
