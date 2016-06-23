@@ -1,6 +1,6 @@
 # Slack Emojibot 💩🤖🌈💨
 
-This is a bot that adds custom emojis your slack team; *inline in Slack*. 🤔👌  No more putzing around in your web browser. 💃🎉
+This is a bot that adds custom emojis to your slack team; *inline in Slack*. 🤔👌  No more putzing around in your web browser. 💃🎉
 
 Supports *all* of the below via slack. 👇
 
