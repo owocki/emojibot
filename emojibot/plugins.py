@@ -35,7 +35,7 @@ def help(message):
 @respond_to('upload (.*) (.*)')
 def add_to_slack(message, keyword, url):
     try:
-        if message.body['text'].split(' ')[0] == 'fastadd':
+        if message.body['text'].split(' ')[0] in ['fastadd','quickadd']:
             return
 
         print('got command upload')
@@ -58,6 +58,7 @@ def add_to_slack(message, keyword, url):
     except Exception as e:
         handle_exception(message,e)
 
+@respond_to('quickadd (.*)')
 @respond_to('fastadd (.*)')
 def fastadd(message, keyword):
     try:
@@ -98,7 +99,7 @@ def get(message, keyword):
         large = False
         if not len(words):
             return
-        elif words[0] in ['upload','attach','add','help', 'fastadd']:
+        elif words[0] in ['upload','attach','add','help', 'fastadd', 'quickadd']:
             return
         elif words[0] in ['get','find']:
             words = words[1:]
